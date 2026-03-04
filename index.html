@@ -1,260 +1,180 @@
-<!doctype html>
-
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jogo da Memória - Animais</title>
 
 <style>
 body{
-    font-family: Arial;
+    margin:0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: linear-gradient(180deg,#0f2027,#203a43,#2c5364);
     text-align:center;
-    background:#1e1e2f;
     color:white;
 }
 
 h1{
-    margin-top:10px;
+    margin-top:15px;
 }
 
-#tabuleiro{
+#placar{
+    font-size:18px;
+    margin:10px;
+}
+
+.tabuleiro{
     display:grid;
-    grid-template-columns: repeat(8, 80px);
-    grid-gap:10px;
-    justify-content:center;
-    margin-top:20px;
+    grid-template-columns: repeat(6, 1fr); /* 6 colunas para modo vertical */
+    max-width:420px; /* largura ideal para celular */
+    margin:20px auto;
+    gap:8px;
 }
 
 .carta{
-    width:80px;
-    height:80px;
-    background:#333;
-    border-radius:10px;
-    cursor:pointer;
-    position:relative;
-    transform-style: preserve-3d;
-    transition: transform 0.5s;
-}
-
-.carta.virada{
-    transform: rotateY(180deg);
-}
-
-.frente, .verso{
-    position:absolute;
-    width:100%;
-    height:100%;
-    border-radius:10px;
-    backface-visibility: hidden;
-}
-
-.verso{
-    background:#555;
-}
-
-.frente{
-    transform: rotateY(180deg);
-    background:#fff;
+    aspect-ratio:1/1;
+    background:#ffffff;
+    border-radius:12px;
     display:flex;
     align-items:center;
     justify-content:center;
-}
-
-.frente img{
-    width:70px;
-    height:70px;
-    object-fit:contain;
-}
-
-.encontrada{
-    box-shadow:0 0 10px #4CAF50;
-}
-
-.info{
-    margin-top:20px;
-    font-size:18px;
-}
-
-button{
-    margin-top:15px;
-    padding:10px 20px;
-    border:none;
-    border-radius:5px;
-    background:#ff9800;
-    color:white;
-    font-size:16px;
+    font-size:28px;
     cursor:pointer;
+    transition:transform 0.3s;
+}
+
+.carta:hover{
+    transform:scale(1.05);
+}
+
+.carta.fechada{
+    background:#111;
+}
+
+#mensagem{
+    font-size:20px;
+    margin:15px;
+    font-weight:bold;
 }
 </style>
+</head>
+<body>
 
+<h1>🐾 Jogo da Memória</h1>
 
-
-<h1>  </h1>
-
-<div class="info">
-    <div>Jogador 1: <span id="p1">0</span></div>
-    <div>Jogador 2: <span id="p2">0</span></div>
-    <div id="vez">Vez do Jogador 1</div>
+<div id="placar">
+Jogador 1: <span id="p1">0</span> |
+Jogador 2: <span id="p2">0</span><br>
+Vez do: <span id="vez">Jogador 1</span>
 </div>
 
-<div id="tabuleiro"></div>
+<div class="tabuleiro" id="tabuleiro"></div>
 
-<button onclick="reiniciar()">Reiniciar</button>
+<div id="mensagem"></div>
+
+<!-- Som -->
+<audio id="somVirar" src="https://www.soundjay.com/button/sounds/button-16.mp3"></audio>
+<audio id="somAcerto" src="https://www.soundjay.com/button/sounds/button-4.mp3"></audio>
 
 <script>
+let jogador = 1
+let pontos1 = 0
+let pontos2 = 0
+let primeira = null
+let segunda = null
+let bloqueado = false
 
-const animais = [
-"https://cdn-icons-png.flaticon.com/512/616/616408.png", // cachorro
-"https://cdn-icons-png.flaticon.com/512/616/616430.png", // gato
-"https://cdn-icons-png.flaticon.com/512/1998/1998610.png", // leão
-"https://cdn-icons-png.flaticon.com/512/616/616438.png", // macaco
-"https://cdn-icons-png.flaticon.com/512/616/616420.png", // vaca
-"https://cdn-icons-png.flaticon.com/512/616/616439.png", // urso
-"https://cdn-icons-png.flaticon.com/512/616/616417.png", // coelho
-"https://cdn-icons-png.flaticon.com/512/616/616431.png", // porco
-"https://cdn-icons-png.flaticon.com/512/616/616412.png", // galinha
-"https://cdn-icons-png.flaticon.com/512/616/616415.png", // cavalo
-"https://cdn-icons-png.flaticon.com/512/616/616419.png", // panda
-"https://cdn-icons-png.flaticon.com/512/616/616414.png", // tigre
-"https://cdn-icons-png.flaticon.com/512/616/616421.png", // raposa
-"https://cdn-icons-png.flaticon.com/512/616/616423.png", // elefante
-"https://cdn-icons-png.flaticon.com/512/616/616409.png", // sapo
-"https://cdn-icons-png.flaticon.com/512/616/616424.png", // zebra
-"https://cdn-icons-png.flaticon.com/512/616/616416.png", // ovelha
-"https://cdn-icons-png.flaticon.com/512/616/616425.png", // girafa
-"https://cdn-icons-png.flaticon.com/512/616/616426.png", // pinguim
-"https://cdn-icons-png.flaticon.com/512/616/616422.png"  // rato
-];
+let somVirar = document.getElementById("somVirar")
+let somAcerto = document.getElementById("somAcerto")
 
-let cartas = [];
-let primeira = null;
-let segunda = null;
-let bloqueado = false;
+// 36 animais = 72 cartas
+let animais = [
+"🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼",
+"🐨","🐯","🦁","🐮","🐷","🐸","🐵","🐔",
+"🐧","🐦","🦆","🦉","🦅","🐺","🐗","🐴",
+"🦄","🐝","🐛","🦋","🐌","🐞","🐢","🐍",
+"🐙","🦑","🦀","🐠"
+]
 
-let vez = 1;
-let pontos1 = 0;
-let pontos2 = 0;
+let cartasArray = [...animais, ...animais]
+cartasArray.sort(()=>Math.random()-0.5)
 
-function criarCartas(){
-    cartas = [];
-    animais.forEach(img=>{
-        cartas.push(img);
-        cartas.push(img);
-    });
-    cartas.sort(()=> Math.random() - 0.5);
-}
+let tabuleiro = document.getElementById("tabuleiro")
 
-function criarTabuleiro(){
-    const tabuleiro = document.getElementById("tabuleiro");
-    tabuleiro.innerHTML = "";
+cartasArray.forEach(valor=>{
+    let carta = document.createElement("div")
+    carta.classList.add("carta","fechada")
+    carta.dataset.valor = valor
+    carta.innerHTML = "❓"
+    carta.addEventListener("click", virarCarta)
+    tabuleiro.appendChild(carta)
+})
 
-    cartas.forEach((img)=>{
-        const carta = document.createElement("div");
-        carta.classList.add("carta");
+function virarCarta(){
+    if(bloqueado) return
+    if(!this.classList.contains("fechada")) return
 
-        const frente = document.createElement("div");
-        frente.classList.add("frente");
+    somVirar.currentTime = 0
+    somVirar.play()
 
-        const imagem = document.createElement("img");
-        imagem.src = img;
-
-        frente.appendChild(imagem);
-
-        const verso = document.createElement("div");
-        verso.classList.add("verso");
-
-        carta.appendChild(frente);
-        carta.appendChild(verso);
-
-        carta.onclick = ()=> virarCarta(carta,img);
-
-        tabuleiro.appendChild(carta);
-    });
-}
-
-function virarCarta(carta,img){
-
-    if(bloqueado) return;
-    if(carta.classList.contains("virada")) return;
-    if(carta.classList.contains("encontrada")) return;
-
-    carta.classList.add("virada");
+    this.classList.remove("fechada")
+    this.innerHTML = this.dataset.valor
 
     if(!primeira){
-        primeira = {carta,img};
-        return;
-    }
-
-    segunda = {carta,img};
-    bloqueado = true;
-
-    if(primeira.img === segunda.img){
-
-        primeira.carta.classList.add("encontrada");
-        segunda.carta.classList.add("encontrada");
-
-        if(vez === 1){
-            pontos1++;
-            document.getElementById("p1").innerText = pontos1;
-        }else{
-            pontos2++;
-            document.getElementById("p2").innerText = pontos2;
-        }
-
-        resetar();
-        bloqueado = false;
-        verificarFim();
-
+        primeira = this
     }else{
+        segunda = this
+        bloqueado = true
 
-        setTimeout(()=>{
-            primeira.carta.classList.remove("virada");
-            segunda.carta.classList.remove("virada");
+        if(primeira.dataset.valor === segunda.dataset.valor){
 
-            vez = vez === 1 ? 2 : 1;
-            atualizarVez();
+            somAcerto.currentTime = 0
+            somAcerto.play()
 
-            resetar();
-            bloqueado = false;
-        },1000);
+            if(jogador === 1){
+                pontos1++
+                document.getElementById("p1").innerText = pontos1
+            }else{
+                pontos2++
+                document.getElementById("p2").innerText = pontos2
+            }
+
+            resetar()
+        }else{
+            setTimeout(()=>{
+                primeira.classList.add("fechada")
+                segunda.classList.add("fechada")
+                primeira.innerHTML="❓"
+                segunda.innerHTML="❓"
+                trocarJogador()
+                resetar()
+            },900)
+        }
     }
+}
+
+function trocarJogador(){
+    jogador = jogador === 1 ? 2 : 1
+    document.getElementById("vez").innerText = "Jogador " + jogador
 }
 
 function resetar(){
-    primeira = null;
-    segunda = null;
-}
-
-function atualizarVez(){
-    document.getElementById("vez").innerText =
-        vez === 1 ? "Vez do Jogador 1" : "Vez do Jogador 2";
+    primeira = null
+    segunda = null
+    bloqueado = false
+    verificarFim()
 }
 
 function verificarFim(){
-    if(pontos1 + pontos2 === 20){
-        setTimeout(()=>{
-            if(pontos1 > pontos2){
-                alert("🏆 Jogador 1 venceu!");
-            }else if(pontos2 > pontos1){
-                alert("🏆 Jogador 2 venceu!");
-            }else{
-                alert("Empate!");
-            }
-        },500);
+    if(pontos1 + pontos2 === 36){
+        let msg=""
+        if(pontos1 > pontos2) msg="🏆 Jogador 1 venceu!"
+        else if(pontos2 > pontos1) msg="🏆 Jogador 2 venceu!"
+        else msg="🤝 Empate!"
+        document.getElementById("mensagem").innerText = msg
     }
 }
-
-function reiniciar(){
-    pontos1 = 0;
-    pontos2 = 0;
-    vez = 1;
-    atualizarVez();
-    document.getElementById("p1").innerText = 0;
-    document.getElementById("p2").innerText = 0;
-    criarCartas();
-    criarTabuleiro();
-}
-
-criarCartas();
-criarTabuleiro();
-
 </script>
 
-
-</!doctype>
+</body>
+</html>
