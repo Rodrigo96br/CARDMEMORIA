@@ -20,7 +20,7 @@ h1{
 }
 
 #placar{
-    font-size:18px;
+    font-size:10px;
     margin:5px;
 }
 
@@ -39,7 +39,7 @@ h1{
     display:flex;
     align-items:center;
     justify-content:center;
-    font-size:32px;
+    font-size:50px;
     cursor:pointer;
     transition:transform 0.3s;
 }
@@ -71,30 +71,19 @@ button{
 }
 
 /* Aviso se estiver na vertical */
-@media screen and (orientation: portrait) {
-    body::before{
-        content: "🔄 Vire o celular para jogar";
-        position: fixed;
-        inset: 0;
-        background: #000;
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 22px;
-        z-index: 999;
+
     }
 }
 </style>
 </head>
 <body>
 
-<h1>🐾 Jogo da Memória</h1>
+<h1></h1>
 
 <div id="placar">
-Jogador 1: <span id="p1">0</span> |
-Jogador 2: <span id="p2">0</span><br>
-Vez do: <span id="vez">Jogador 1</span>
+(JOGADOR 1) <span id="p1">[0</span> -
+<span id="p2">0]</span> (JOGADOR 2)<br>
+Vez do: <span id="vez">JOGADOR 1</span>
 </div>
 
 <div class="tabuleiro" id="tabuleiro"></div>
@@ -118,11 +107,11 @@ let somVirar = document.getElementById("somVirar")
 let somAcerto = document.getElementById("somAcerto")
 
 let animais = [
-"🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼",
-"🐨","🐯","🦁","🐮","🐷","🐸","🐵","🐔",
-"🐧","🐦","🦆","🦉","🦅","🐺","🐗","🐴",
-"🦄","🐝","🐛","🦋","🐌","🐞","🐢","🐍",
-"🐙","🦑","🦀","🐠"
+"🐕","🐈","🦘","🦢","🐇","🐊","🦚","🐬",
+"🐘","🐅","🐆","🐂","🐖","🦍","🐒","🐈‍⬛",
+"🐧","🐦","🦆","🦉","🦅","🐿","🐓","🐎",
+"🦓","🐝","🐜","🦋","🐌","🪳","🐢","🐍",
+"🐙","🦂","🦀","🐠"
 ]
 
 let cartasArray = [...animais, ...animais]
@@ -134,7 +123,7 @@ cartasArray.forEach(valor=>{
     let carta = document.createElement("div")
     carta.classList.add("carta","fechada")
     carta.dataset.valor = valor
-    carta.innerHTML = "❓"
+    carta.innerHTML = "🕸"
     carta.addEventListener("click", virarCarta)
     tabuleiro.appendChild(carta)
 })
@@ -171,8 +160,8 @@ function virarCarta(){
             setTimeout(()=>{
                 primeira.classList.add("fechada")
                 segunda.classList.add("fechada")
-                primeira.innerHTML="❓"
-                segunda.innerHTML="❓"
+                primeira.innerHTML="🕸"
+                segunda.innerHTML="🕸"
                 trocarJogador()
                 resetar()
             },800)
@@ -195,9 +184,9 @@ function resetar(){
 function verificarFim(){
     if(pontos1 + pontos2 === 36){
         let msg=""
-        if(pontos1 > pontos2) msg="🏆 Jogador 1 venceu!"
-        else if(pontos2 > pontos1) msg="🏆 Jogador 2 venceu!"
-        else msg="🤝 Empate!"
+        if(pontos1 > pontos2) msg="Jogador 1 venceu!"
+        else if(pontos2 > pontos1) msg="Jogador 2 venceu!"
+        else msg="Empate!"
         document.getElementById("mensagem").innerText = msg
     }
 }
