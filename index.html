@@ -111,7 +111,7 @@ cartasArray.forEach(valor=>{
     let carta = document.createElement("div")
     carta.classList.add("carta","fechada")
     carta.dataset.valor = valor
-    carta.innerHTML = "🕸"
+    carta.innerHTML = "⚜"
     carta.addEventListener("click", virarCarta)
     tabuleiro.appendChild(carta)
 })
@@ -148,8 +148,8 @@ function virarCarta(){
             setTimeout(()=>{
                 primeira.classList.add("fechada")
                 segunda.classList.add("fechada")
-                primeira.innerHTML="🕸"
-                segunda.innerHTML="🕸"
+                primeira.innerHTML="⚜"
+                segunda.innerHTML="⚜"
                 trocarJogador()
                 resetar()
             },800)
