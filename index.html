@@ -1,89 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Jogo da Memória - Horizontal</title>
+
 <style>
-.slider {
-  position: relative;
-  max-width: 100%;
-  overflow: hidden;
-  border-radius: 20px;
+body{
+    margin:0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: linear-gradient(180deg,#0f2027,#203a43,#2c5364);
+    text-align:center;
+    color:white;
+    overflow-x:hidden;
 }
 
-.slides {
-  display: flex;
-  transition: transform 0.5s ease;
+h1{
+    margin:10px;
 }
 
-.slide {
-  min-width: 100%;
+#placar{
+    font-size:10px;
+    margin:5px;
 }
 
-.slide img {
-  width: 100%;
-  border-radius: 20px;
-  height: 200px;
-  object-fit: cover;
+.tabuleiro{
+    display:grid;
+    grid-template-columns: repeat(12, 1fr);
+    max-width:95vw;
+    margin:10px auto;
+    gap:6px;
 }
 
-/* Botões */
-.prev, .next {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(0,0,0,0.5);
-  color: #ffff;
-  border: none;
-  font-size: 25px;
-  padding: 10px;
-  cursor: pointer;
+.carta{
+    aspect-ratio:1/1;
+    background:#ffffff;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:50px;
+    cursor:pointer;
+    transition:transform 0.3s;
 }
 
-.prev { left: 10px; }
-.next { right: 10px; }
+.carta:hover{
+    transform:scale(1.05);
+}
+
+.carta.fechada{
+    background:#111;
+    color:#111;
+}
+
+#mensagem{
+    font-size:20px;
+    margin:10px;
+    font-weight:bold;
+}
+
+
+/* Aviso se estiver na vertical */
+
+    }
+}
 </style>
+</head>
+<body>
 
-<div class="slider">
-  <div class="slides" id="slides">
+<h1></h1>
 
-    <div class="slide">
-      <a href="LINK-DO-POST-1">
-        <img src="https://i.ytimg.com/vi/PDoAYvjawhQ/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&amp;rs=AOn4CLBuT32CDjUpDh9yaxM51NRQ7v6r0Q" />
-      </a>
-    </div>
+<div id="placar">
+(JOGADOR 1) <span id="p1">[0</span> -
+<span id="p2">0]</span> (JOGADOR 2)<br>
+Vez do: <span id="vez">JOGADOR 1</span>
+</div>
 
-    <div class="slide">
-      <a href="LINK-DO-POST-2">
-        <img src="https://cdn.awsli.com.br/800x800/1385/1385452/produto/256469963/16956-need-for-speed-most-wanted-5-1-0-psp-capa-1-7qwolis2kh.jpeg" />
-      </a>
-    </div>
+<div class="tabuleiro" id="tabuleiro"></div>
 
-    <div class="slide">
-      <a href="LINK-DO-POST-3">
-        <img src="https://i.ytimg.com/vi/3u64vbSiwI4/maxresdefault.jpg" />
-      </a>
-    </div>
+<div id="mensagem"></div>
 
-  </div>
+<audio id="somVirar" src="https://www.soundjay.com/buttons_c2026/sounds/button-20.mp3"></audio>
+<audio id="somAcerto" src="https://store.soundeffectgenerator.org/instants/wav-fanfare-sound-effect/86da128e-victory-wav.mp3"></audio>
 
-  <button class="prev" onclick="mudarSlide(-1)">❮</button>
-  <button class="next" onclick="mudarSlide(1)">❯</button></div>
+<script>
+let jogador = 1
+let pontos1 = 0
+let pontos2 = 0
+let primeira = null
+let segunda = null
+let bloqueado = false
 
-<b><script>
-let index = 0;
+let somVirar = document.getElementById("somVirar")
+let somAcerto = document.getElementById("somAcerto")
 
-function mudarSlide(direcao){
-  const slides = document.getElementById("slides");
-  const total = slides.children.length;
+let animais = [
+"🍞","🥞","🧀","🥩","🍔","🍟","🍕","🌭",
+"🥪","🌮","🍳","🥣","🥗","🍿","🧈","🧂",
+"🥫","🍜","🍰","🥧","🍫","🍬","🍭","🍮",
+"🍯","🍼","🥛","☕","🫖","🍾","🍷","🍺",
+"🍩","🍨","🍦","🎂"
+]
 
-  index += direcao;
+let cartasArray = [...animais, ...animais]
+cartasArray.sort(()=>Math.random()-0.5)
 
-  if(index < 0) index = total - 1;
-  if(index >= total) index = 0;
+let tabuleiro = document.getElementById("tabuleiro")
 
-  slides.style.transform = "translateX(" + (-index * 100) + "%)";
+cartasArray.forEach(valor=>{
+    let carta = document.createElement("div")
+    carta.classList.add("carta","fechada")
+    carta.dataset.valor = valor
+    carta.innerHTML = ""
+    carta.addEventListener("click", virarCarta)
+    tabuleiro.appendChild(carta)
+})
+
+function virarCarta(){
+    if(bloqueado) return
+    if(!this.classList.contains("fechada")) return
+
+    somVirar.cloneNode(true).play()
+
+    this.classList.remove("fechada")
+    this.innerHTML = this.dataset.valor
+
+    if(!primeira){
+        primeira = this
+    }else{
+        segunda = this
+        bloqueado = true
+
+        if(primeira.dataset.valor === segunda.dataset.valor){
+
+            somAcerto.cloneNode(true).play()
+
+            if(jogador === 1){
+                pontos1++
+                document.getElementById("p1").innerText = pontos1
+            }else{
+                pontos2++
+                document.getElementById("p2").innerText = pontos2
+            }
+
+            resetar()
+        }else{
+            setTimeout(()=>{
+                primeira.classList.add("fechada")
+                segunda.classList.add("fechada")
+                primeira.innerHTML=""
+                segunda.innerHTML=""
+                trocarJogador()
+                resetar()
+            },800)
+        }
+    }
 }
 
-// automático
-setInterval(() => {
-  mudarSlide(1);
-}, 3000);
+function trocarJogador(){
+    jogador = jogador === 1 ? 2 : 1
+    document.getElementById("vez").innerText = "Jogador " + jogador
+}
+
+function resetar(){
+    primeira = null
+    segunda = null
+    bloqueado = false
+    verificarFim()
+}
+
+function verificarFim(){
+    if(pontos1 + pontos2 === 36){
+        let msg=""
+        if(pontos1 > pontos2) msg="Jogador 1 venceu!"
+        else if(pontos2 > pontos1) msg="Jogador 2 venceu!"
+        else msg="Empate!"
+        document.getElementById("mensagem").innerText = msg
+    }
+}
 </script>
 
-</b><div class="galeria"><b><br /></b></div><div class="galeria"><b>JOGOS DISPONÍVEL PARA BAIXAR</b></div><div class="galeria"><span face="Arial, sans-serif" style="font-size: 11pt; font-variant-east-asian: normal; font-variant-numeric: normal; text-align: center; vertical-align: baseline; white-space: pre-wrap;"><span style="border: none; display: inline-block; height: 144px; overflow: hidden; width: 87px;"><img height="144" src="https://blogger.googleusercontent.com/img/a/AVvXsEiWtzGLY4nuPfmBMJJxa6NbeDtPeqQF6k_YvqQpywDIF5Kbvhpp9bwz6vuQE1-o21bb6mI76ZWbKWZlHMT4mdY31iG_OzI7fS_ALQs4JNwhibzcD4O4FPp_XNp5pDvsEVBn4WsN-kpv6YPNoX2GjYLkfihiRl8MJDKbE7HSRIHzFcRJ6YKT8FdI6JWuhcg" style="margin-left: 0px; margin-top: 0px;" width="87" /></span></span><span face="Arial, sans-serif" style="font-size: 11pt; font-variant-east-asian: normal; font-variant-numeric: normal; text-align: center; vertical-align: baseline; white-space: pre-wrap;"><span style="border: none; display: inline-block; height: 144px; overflow: hidden; width: 87px;"><a href="https://cur.to/tudx"><img height="144" src="https://blogger.googleusercontent.com/img/a/AVvXsEjH3MUnmAC1Mn2sbthPF6AhsDMjrs-XBY-GfeBgAhjo3b18hit063qP1Uh7WLT51Wr-86y3zT4w1hEout7Tz9mGerEOUTgJ_5P1wJD7TNBEJCcX9fI6rX_l-jJUvu5hsLU0GPg9jLBdJa4q1vKm_OMHqv57vvz-6M_Y1y7T1PgQd3V_MMevcw1sOykvn6g" style="margin-left: 0px; margin-top: 0px;" width="87" /></a></span></span><span face="Arial, sans-serif" style="font-size: 11pt; font-variant-east-asian: normal; font-variant-numeric: normal; text-align: center; vertical-align: baseline; white-space: pre-wrap;"><span style="border: none; display: inline-block; height: 144px; overflow: hidden; width: 87px;"><img height="144" src="https://blogger.googleusercontent.com/img/a/AVvXsEiZno9wx9XWUL7_mxRtTzd8YG3e-mzEThrbBi-jmpmBK-DFvz5zDjJmoFc1YWe1dRpBl67AOd07VvKWz5-cpxSw-xUYwS62bTOGxoYBGxvPzIthaXjfG5uOCzBh2FRNaEjdeeGGsRAoKyCMOGfqxamJ1elVx7yTpYyWfTlAoMI_henLw8b7vCDJ31RnhjU" style="margin-left: 0px; margin-top: 0px;" width="87" /></span></span><span face="Arial, sans-serif" style="font-size: 11pt; font-variant-east-asian: normal; font-variant-numeric: normal; text-align: center; vertical-align: baseline; white-space: pre-wrap;"><span style="border: none; display: inline-block; height: 144px; overflow: hidden; width: 87px;"><img height="144" src="https://blogger.googleusercontent.com/img/a/AVvXsEh_tyxyPKoLbSfoA8ksOTkcpLsT1T3g7EcAfweXJuDDAz_8Ifa-6ByWNbCJaTavuh_SuHA6LmFaXG7XC6GRS9GN7DbhJH4y8cxSztlh_lyQ6ZEv-8Mr99R8kr22cXROuIzc_LtfMu9sdYSxhXOFN_fNtNK0f8VdEkcHYpYK8KS5oyp6-bhyZXjHmSxGJn8" style="margin-left: 0px; margin-top: 0px;" width="87" /></span></span></div><div class="separator" style="clear: both; text-align: center;"><h3><span id="docs-internal-guid-6d444c37-7fff-382c-bb34-df5e367ea4fc" style="font-weight: normal;"><div class="separator" style="clear: both; text-align: center;"><div class="separator" style="clear: both; text-align: center;"><div class="separator" style="clear: both; font-size: medium;"><div class="separator" style="clear: both; text-align: center;"><img alt="" data-original-height="768" data-original-width="1366" height="180" src="https://blogger.googleusercontent.com/img/a/AVvXsEhX3THRPocvhngEbRGxIA64G5cpRxqc3bx2wh95JU6fegsHeaoP7Ja4jsAxE0iPqEgnkG7IrsquNDIjDBx8TQXY3-EYxmes0bgu0VQjUPUDmLKd9x4H1t0MoOKi-vxzdflv06gPvKNR_88j0sDNq7OUqRWMnG0twFwELIY7zWbe9tQofTmULPhowDOELbY=w339-h180" width="339" /></div>PES2014 CAMERA DE PS5</div><div class="separator" style="clear: both; font-size: medium;"><object class="BLOG_video_class" contentid="a9826ed5480af9be" height="232" id="BLOG_video-a9826ed5480af9be" width="344"></object></div></div></div><div class="separator" style="clear: both; text-align: center;"><b><object class="BLOG_video_class" contentid="1325c0d79ba08818" height="245" id="BLOG_video-1325c0d79ba08818" width="348"></object></b></div></span></h3></div>
+</body>
+</html>
