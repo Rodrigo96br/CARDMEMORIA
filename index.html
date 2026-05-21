@@ -1,167 +1,401 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Jogo da Memória - Animais</title>
+<title>Jogo da Memória Multiplayer</title>
 
 <style>
-body{
+*{
     margin:0;
-    font-family: Arial, Helvetica, sans-serif;
-    background: linear-gradient(135deg,#1e3c72,#2a5298);
-    text-align:center;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:Arial, sans-serif;
+    background:#111;
     color:white;
+    transition:0.4s;
+    overflow-x:hidden;
 }
 
-h1{
-    margin-top:15px;
-}
-
-#placar{
-    font-size:18px;
-    margin:10px;
-}
-
-.tabuleiro{
-    display:grid;
-    grid-template-columns: repeat(auto-fit, minmax(60px,1fr));
-    max-width:600px;
-    margin:20px auto;
-    gap:8px;
-}
-
-.carta{
-    aspect-ratio:1/1;
-    background:#ffffff;
-    border-radius:10px;
+/* MENU */
+.menu{
+    position:fixed;
+    inset:0;
+    background:#000;
     display:flex;
-    align-items:center;
+    flex-direction:column;
     justify-content:center;
-    font-size:30px;
-    cursor:pointer;
-    transition:0.3s;
-    transform:scale(1);
+    align-items:center;
+    z-index:999;
 }
 
-.carta:hover{
+.menu h1{
+    font-size:40px;
+    margin-bottom:20px;
+}
+
+.players{
+    display:flex;
+    gap:20px;
+    margin-bottom:20px;
+}
+
+.player-option{
+    padding:20px;
+    border-radius:15px;
+    cursor:pointer;
+    border:3px solid transparent;
+    transition:0.3s;
+}
+
+.player-option:hover{
     transform:scale(1.05);
 }
 
-.carta.fechada{
-    background:#333;
+.blue{
+    background:#0066ff;
 }
 
-#mensagem{
-    font-size:20px;
-    margin:15px;
+.red{
+    background:#ff0000;
+}
+
+.selected{
+    border:3px solid #fff;
+}
+
+button{
+    padding:15px 30px;
+    border:none;
+    border-radius:10px;
+    font-size:18px;
+    cursor:pointer;
     font-weight:bold;
+}
+
+/* GAME */
+.game-container{
+    padding:20px;
+    display:none;
+}
+
+.top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:20px;
+    flex-wrap:wrap;
+    gap:10px;
+}
+
+.info{
+    font-size:20px;
+    font-weight:bold;
+}
+
+.board{
+    display:grid;
+    grid-template-columns:repeat(6, 1fr);
+    gap:10px;
+    max-width:700px;
+    margin:auto;
+}
+
+.card{
+    width:100%;
+    aspect-ratio:1/1;
+    background:#000;
+    border:5px solid #000;
+    position:relative;
+    cursor:pointer;
+    transform-style:preserve-3d;
+    transition:0.5s;
+}
+
+.card.flip{
+    transform:rotateY(180deg);
+}
+
+.front,
+.back{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    backface-visibility:hidden;
+    font-size:35px;
+    border:4px solid #000;
+}
+
+.front{
+    background:linear-gradient(135deg,#888,#666);
+}
+
+.back{
+    background:white;
+    transform:rotateY(180deg);
+}
+
+/* WINNER BOX */
+.winner{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.8);
+    display:none;
+    justify-content:center;
+    align-items:center;
+    z-index:9999;
+}
+
+.winner-box{
+    background:#222;
+    padding:40px;
+    border-radius:20px;
+    text-align:center;
+    width:90%;
+    max-width:400px;
+}
+
+.winner-box h2{
+    margin-bottom:20px;
+    font-size:30px;
+}
+
+.winner-box button{
+    margin-top:20px;
+}
+
+/* RESPONSIVO */
+@media(max-width:700px){
+    .board{
+        grid-template-columns:repeat(4, 1fr);
+    }
 }
 </style>
 </head>
 <body>
 
-<h1>🐾 Jogo da Memória - Animais</h1>
+<!-- MENU -->
+<div class="menu" id="menu">
+    <h1>🧠 JOGO DA MEMÓRIA</h1>
 
-<div id="placar">
-Jogador 1: <span id="p1">0</span> |
-Jogador 2: <span id="p2">0</span><br>
-Vez do: <span id="vez">Jogador 1</span>
+    <div class="players">
+        <div class="player-option blue selected" id="p1Color">
+            PLAYER 1 🔵
+        </div>
+
+        <div class="player-option red selected" id="p2Color">
+            PLAYER 2 🔴
+        </div>
+    </div>
+
+    <button onclick="startGame()">INICIAR JOGO</button>
 </div>
 
-<div class="tabuleiro" id="tabuleiro"></div>
+<!-- JOGO -->
+<div class="game-container" id="game">
 
-<div id="mensagem"></div>
+    <div class="top">
+        <div class="info" id="turn">
+            VEZ DO PLAYER 1
+        </div>
+
+        <div class="info">
+            🔵 P1: <span id="score1">0</span>
+            |
+            🔴 P2: <span id="score2">0</span>
+        </div>
+    </div>
+
+    <div class="board" id="board"></div>
+
+</div>
+
+<!-- VENCEDOR -->
+<div class="winner" id="winnerBox">
+    <div class="winner-box">
+        <h2 id="winnerText"></h2>
+
+        <button onclick="location.reload()">
+            JOGAR NOVAMENTE
+        </button>
+    </div>
+</div>
 
 <script>
-let jogador = 1
-let pontos1 = 0
-let pontos2 = 0
-let primeira = null
-let segunda = null
-let bloqueado = false
 
-// 36 animais (36 pares = 72 cartas)
-let animais = [
-"🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼",
-"🐨","🐯","🦁","🐮","🐷","🐸","🐵","🐔",
-"🐧","🐦","🦆","🦉","🦅","🐺","🐗","🐴",
-"🦄","🐝","🐛","🦋","🐌","🐞","🐢","🐍",
-"🐙","🦑","🦀","🐠"
-]
+const emojis = [
+"🍎","🍎",
+"⚽","⚽",
+"🚗","🚗",
+"🎮","🎮",
+"🐶","🐶",
+"🔥","🔥",
+"💎","💎",
+"🍕","🍕",
+"🎧","🎧",
+"👑","👑",
+"🌈","🌈",
+"🚀","🚀"
+];
 
-let cartasArray = [...animais, ...animais]
+let board = document.getElementById("board");
 
-// Embaralhar
-cartasArray.sort(()=>Math.random()-0.5)
+let firstCard = null;
+let secondCard = null;
+let lock = false;
 
-let tabuleiro = document.getElementById("tabuleiro")
+let currentPlayer = 1;
 
-cartasArray.forEach(valor=>{
-    let carta = document.createElement("div")
-    carta.classList.add("carta","fechada")
-    carta.dataset.valor = valor
-    carta.innerHTML = "❓"
-    carta.addEventListener("click", virarCarta)
-    tabuleiro.appendChild(carta)
-})
+let score1 = 0;
+let score2 = 0;
 
-function virarCarta(){
-    if(bloqueado) return
-    if(!this.classList.contains("fechada")) return
+function shuffle(array){
+    return array.sort(() => Math.random() - 0.5);
+}
 
-    this.classList.remove("fechada")
-    this.innerHTML = this.dataset.valor
+function startGame(){
 
-    if(!primeira){
-        primeira = this
-    }else{
-        segunda = this
-        bloqueado = true
+    document.getElementById("menu").style.display = "none";
+    document.getElementById("game").style.display = "block";
 
-        if(primeira.dataset.valor === segunda.dataset.valor){
-            if(jogador === 1){
-                pontos1++
-                document.getElementById("p1").innerText = pontos1
-            }else{
-                pontos2++
-                document.getElementById("p2").innerText = pontos2
-            }
-            resetar()
+    createBoard();
+    updateTurn();
+}
+
+function createBoard(){
+
+    let cards = shuffle(emojis);
+
+    cards.forEach(emoji => {
+
+        let card = document.createElement("div");
+        card.className = "card";
+        card.dataset.emoji = emoji;
+
+        card.innerHTML = `
+            <div class="front"></div>
+            <div class="back">${emoji}</div>
+        `;
+
+        card.onclick = () => flipCard(card);
+
+        board.appendChild(card);
+    });
+}
+
+function flipCard(card){
+
+    if(lock) return;
+    if(card.classList.contains("flip")) return;
+
+    card.classList.add("flip");
+
+    if(!firstCard){
+        firstCard = card;
+        return;
+    }
+
+    secondCard = card;
+    lock = true;
+
+    checkMatch();
+}
+
+function checkMatch(){
+
+    let match = firstCard.dataset.emoji === secondCard.dataset.emoji;
+
+    if(match){
+
+        if(currentPlayer === 1){
+            score1++;
+            document.getElementById("score1").innerText = score1;
         }else{
-            setTimeout(()=>{
-                primeira.classList.add("fechada")
-                segunda.classList.add("fechada")
-                primeira.innerHTML="❓"
-                segunda.innerHTML="❓"
-                trocarJogador()
-                resetar()
-            },900)
+            score2++;
+            document.getElementById("score2").innerText = score2;
         }
+
+        resetCards();
+        checkWinner();
+
+    }else{
+
+        setTimeout(() => {
+
+            firstCard.classList.remove("flip");
+            secondCard.classList.remove("flip");
+
+            changePlayer();
+
+            resetCards();
+
+        },1000);
     }
 }
 
-function trocarJogador(){
-    jogador = jogador === 1 ? 2 : 1
-    document.getElementById("vez").innerText = "Jogador " + jogador
+function resetCards(){
+    firstCard = null;
+    secondCard = null;
+    lock = false;
 }
 
-function resetar(){
-    primeira = null
-    segunda = null
-    bloqueado = false
-    verificarFim()
+function changePlayer(){
+
+    currentPlayer = currentPlayer === 1 ? 2 : 1;
+
+    updateTurn();
 }
 
-function verificarFim(){
-    if(pontos1 + pontos2 === 36){
-        let msg=""
-        if(pontos1 > pontos2) msg="🏆 Jogador 1 venceu!"
-        else if(pontos2 > pontos1) msg="🏆 Jogador 2 venceu!"
-        else msg="🤝 Empate!"
-        document.getElementById("mensagem").innerText = msg
+function updateTurn(){
+
+    let turn = document.getElementById("turn");
+
+    if(currentPlayer === 1){
+
+        document.body.style.background = "#002b80";
+
+        turn.innerHTML = "VEZ DO PLAYER 1 🔵";
+
+    }else{
+
+        document.body.style.background = "#660000";
+
+        turn.innerHTML = "VEZ DO PLAYER 2 🔴";
     }
 }
+
+function checkWinner(){
+
+    let total = score1 + score2;
+
+    if(total === emojis.length / 2){
+
+        let text = "";
+
+        if(score1 > score2){
+
+            text = "🎉 PARABÉNS PLAYER 1, VOCÊ GANHOU!";
+
+        }else if(score2 > score1){
+
+            text = "🎉 PARABÉNS PLAYER 2, VOCÊ GANHOU!";
+
+        }else{
+
+            text = "🤝 EMPATE!";
+        }
+
+        document.getElementById("winnerText").innerText = text;
+
+        document.getElementById("winnerBox").style.display = "flex";
+    }
+}
+
 </script>
 
 </body>
